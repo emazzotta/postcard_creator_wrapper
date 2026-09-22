@@ -18,7 +18,8 @@ def rotate_and_scale_image(file, image_target_width=154,
                            image_quality_factor=20,
                            image_rotate=True,
                            image_export=False,
-                           enforce_size=False, # = True, will not make image smaller than given w/h
+                           enforce_size=False, # = True, will not make image smaller than given w/h, for high resolution submissions
+                           fallback_color_fill=False, # = False, will force resize cover even if image is too small.
                            img_format='PNG',
                            **kwargs):
     with Image.open(file) as image:
@@ -45,8 +46,11 @@ def rotate_and_scale_image(file, image_target_width=154,
         # XXX: swissid endpoint expect specific size for postcard
         # if we have an image which is too small, do not upsample but rather center image and fill
         # with boundary color which is most dominant color in image
+        #
+        # validate=True will throw exception if image is too small
+        #
         try:
-            cover = resizeimage.resize_cover(image, [width, height])
+            cover = resizeimage.resize_cover(image, [width, height], validate=fallback_color_fill)
         except Exception as e:
             logger.warning(e)
             logger.warning(f'resizing image from {image.width}x{image.height} to {width}x{height} failed.'
@@ -123,7 +127,12 @@ def create_text_image(text, image_export=False, **kwargs):
             line_w = line_width(size)
             last_line_w = line_w
 
-            lines = textwrap.wrap(msg, width=line_w)
+            lines = []
+            for line in msg.splitlines():
+                cur_lines = textwrap.wrap(line, width=line_w)
+                for cur_line in cur_lines:
+                    lines.append(cur_line)
+            
             font = load_font(size)
             total_w, line_h = font.getsize(msg)
             tot_height = len(lines) * line_h
@@ -153,7 +162,12 @@ def create_text_image(text, image_export=False, **kwargs):
 
     font = load_font(size)
     font_w, font_h = font.getsize(text)
-    lines = textwrap.wrap(text, width=line_w)
+    
+    lines = []
+    for line in text.splitlines():
+        cur_lines = textwrap.wrap(line, width=line_w)
+        for cur_line in cur_lines:
+            lines.append(cur_line)
     text_y_start = center_y(lines, font_h)
 
     canvas = Image.new('RGB', (text_canvas_w, text_canvas_h), text_canvas_bg)

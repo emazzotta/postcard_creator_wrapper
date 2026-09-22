@@ -1,6 +1,6 @@
 # Postcard Creator 
 
-[![PyPI version](https://img.shields.io/pypi/v/postcard_creator.svg)](https://badge.fury.io/py/postcard_creator) [![Build Status](https://travis-ci.org/abertschi/postcard_creator_wrapper.svg?branch=master)](https://travis-ci.org/abertschi/postcard_creator_wrapper) [![codecov](https://codecov.io/gh/abertschi/postcard_creator_wrapper/branch/master/graph/badge.svg)](https://codecov.io/gh/abertschi/postcard_creator_wrapper) [![Codacy Badge](https://api.codacy.com/project/badge/Grade/970d46284d854b11ba4fb0c9cee760c7)](https://www.codacy.com/app/abertschi/postcard_creator_wrapper?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=abertschi/postcard_creator_wrapper&amp;utm_campaign=Badge_Grade) [![PyPI version](https://img.shields.io/pypi/pyversions/postcard_creator.svg)](https://pypi.python.org/pypi/postcard_creator) [![License](https://img.shields.io/badge/License-Apache%202.0-green.svg)](https://opensource.org/licenses/Apache-2.0)
+[![PyPI version](https://img.shields.io/pypi/v/postcard_creator.svg)](https://badge.fury.io/py/postcard_creator) [![codecov](https://codecov.io/gh/abertschi/postcard_creator_wrapper/branch/master/graph/badge.svg)](https://codecov.io/gh/abertschi/postcard_creator_wrapper) [![PyPI version](https://img.shields.io/pypi/pyversions/postcard_creator.svg)](https://pypi.python.org/pypi/postcard_creator) [![License](https://img.shields.io/badge/License-Apache%202.0-green.svg)](https://opensource.org/licenses/Apache-2.0)
 
 A python wrapper around the Rest API of the Swiss Postcard creator.
 
@@ -24,6 +24,7 @@ w.send_free_card(postcard=)
 ```
 
 ## Usage
+Log in with your [SwissID](https://www.swissid.ch/) credentials. Note that 2-factor authentication is not supported (See https://github.com/abertschi/postcard_creator_wrapper/issues/40#issuecomment-1485362680).
 
 ```python
 from postcard_creator.postcard_creator import PostcardCreator, Postcard, Token, Recipient, Sender
@@ -45,6 +46,10 @@ The following keyword arguments are available for advanced configuration.
 **PostcardCreator#send_free_card()**:
 - `image_export=False`: Export postcard image to current directory (os.getcwd)
 - `mock_send=False`: Do not submit order (testing)
+- `fallback_color_fill=False`: On False: If image is too small, force upscale to
+   match postcard aspect ration (background-size: contain), on True: fallback to
+   color fill mode where image is centered and border is filled with most
+   dominant color found in image.
 
 ### Logging
 ```python
@@ -61,7 +66,7 @@ logger = logging.getLogger('postcard_creator')
 
 ## Example
 - [Postcards](https://github.com/abertschi/postcards) is a commandline interface built around this library.
-- See [tests](./tests/) for more usage examples.
+- See [postcard-love](https://github.com/abertschi/postcard-love) for more usage examples.
 
 ## Test
 ```sh
@@ -76,6 +81,19 @@ pytest
 - [postcardcreator](https://github.com/gido/postcardcreator) - node.js API for the Swiss Post Postcard Creator
 
 ## Release notes
+### 2.4, 2023-08-12
+- add fallback_color_fill parameter in send_free_card() 
+### v2.3, 2022-09-30
+- changes in internals of swissid token authentication due to introduction of anomaly-detection #41
+
+### v2.2, 2021-07-07
+- drop support for postcard_creator_legacy
+- update legacy (username/ password) token authentication due to changed endpoints
+  - note: legacy method now uses postcard_creator_swissid endpoints instead of postcard_creator_legacy, postcard_creator_legacy is out of life
+  
+### v2.1, 2021-05-16
+- update requests to v2.25.1 to fix "AttributeError: 'NoneType' object has no attribute 'group'" in authentication. #27
+
 ### v2.0, 2021-02
 - support of new swissid authentication (access_token with code/ code_verifier)
 - support of new endpoints at https://pccweb.api.post.ch/secure/api/mobile/v1
@@ -102,6 +120,15 @@ pytest
 - do not use requirements.txt in setup.py anymore. set all requirements in 
 install_requires without explicit version numbers
 
+## Troubleshooting
+
+#### “The headers or library files could not be found for jpeg”
+`pip install` fails with the above error. Install libjpeg as discussed here
+https://stackoverflow.com/questions/44043906/the-headers-or-library-files-could-not-be-found-for-jpeg-installing-pillow-on
+
+#### "AttributeError: 'FreeTypeFont' object has no attribute 'getsize'"
+pip install Pillow==9.5.0
+
 ## Author
 
 Andrin Bertschi  
@@ -112,3 +139,4 @@ Andrin Bertschi
 [Apache License 2.0](LICENSE.md)
 
 <3
+
